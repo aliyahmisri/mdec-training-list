@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Dec 25 17:06:01 2020
+@author: aliyahmisri
+Code Reference: https://learningactors.com/how-to-scrape-multiple-pages-of-a-website-using-a-python-web-scraper/
+"""
+
+#Importing libraries
+import requests
+from requests import get
+from bs4 import BeautifulSoup
+import pandas as pd
+import numpy as np
+
+from time import sleep
+from random import randint
+
+#To ensure we get English-translated training list
+headers = {"Accept-Language": "en-US, en;q=0.5"}
+
+#Initiate data storage
+trainings=[] #List to store name of the training
+durations=[] #List to store price of the training duration
+
+#Initializing range of web pages with starting page 1 and end at page 15 (incremental of 1)
+pages = np.arange(1, 15, 1)
+
+#For loop to go through each of the webpage and training list
+for page in pages:
+    
+    #Accessing the web pages
+    page = requests.get("https://mdec.my/digitalskillstrainingdirectory/page/" + str(page)+"/", headers = headers)
+    soup = BeautifulSoup(page.text, "html.parser")
+    training_con = soup.find_all('div', class_='course-thumbs__card-content')
+
+    sleep(randint(2,10))
+    
+    #Scraping code
+    for container in training_con:
+        
+        training = container.find_all("div", class_="course-thumbs__card-title")
+        trainings.append(training)
+        
+        duration = container.find_all("span", class_="course-thumbs__card-desc")
+        durations.append(duration) #later understand what is it meant by append
+
+
+#Creating Dataframe
+df = pd.DataFrame({'training':trainings,'duration':durations})
+
+#Printing Dataframe to see
+print(df.heads())
+
+#Write data as CSV file
+df.to_csv('training_list_v6.csv', index=False, encoding='utf-8');
